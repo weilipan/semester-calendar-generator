@@ -1,7 +1,7 @@
 // 當試算表開啟時，在選單中新增「產生學期行事曆」
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('自定義功能')
+    .createMenu('學期行事曆')
     .addItem('產生學期行事曆', 'generateCalendar')
     .addToUi();
 }
@@ -10,21 +10,29 @@ function generateCalendar() {
   var ui = SpreadsheetApp.getUi();
   // 取得當前日期，作為對話框預設值
   var now = new Date();
-  var defaultYear = now.getFullYear();
-  var defaultMonth = now.getMonth() + 1; // 月份從0開始
-  var defaultDay = now.getDate();
+  var defaultDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyyMMdd");
   
   // 依序取得使用者輸入的起始與結束日期，預設值皆填入當下日期的年度、月份、日期
-  var startYear = parseInt(ui.prompt('請輸入起始年份', '例如：' + defaultYear, ui.ButtonSet.OK).getResponseText(), 10);
-  var startMonth = parseInt(ui.prompt('請輸入起始月份', '例如：' + defaultMonth, ui.ButtonSet.OK).getResponseText(), 10);
-  var startDay = parseInt(ui.prompt('請輸入起始日期', '例如：' + defaultDay, ui.ButtonSet.OK).getResponseText(), 10);
+  // 讓使用者輸入起始與結束日期，格式為 YYYYMMDD
+  var startInput = ui.prompt('請輸入起始日期 (YYYYMMDD)', '例如：' + defaultDate, ui.ButtonSet.OK).getResponseText();
+  var endInput = ui.prompt('請輸入結束日期 (YYYYMMDD)', '例如：' + defaultDate, ui.ButtonSet.OK).getResponseText();
   
-  var endYear = parseInt(ui.prompt('請輸入結束年份', '例如：' + defaultYear, ui.ButtonSet.OK).getResponseText(), 10);
-  var endMonth = parseInt(ui.prompt('請輸入結束月份', '例如：' + defaultMonth, ui.ButtonSet.OK).getResponseText(), 10);
-  var endDay = parseInt(ui.prompt('請輸入結束日期', '例如：' + defaultDay, ui.ButtonSet.OK).getResponseText(), 10);
+  // 確保輸入為8位數字
+  if (!/^\d{8}$/.test(startInput) || !/^\d{8}$/.test(endInput)) {
+    ui.alert("請輸入正確的日期格式 (YYYYMMDD)");
+    return;
+  }
   
-  var startDate = new Date(startYear, startMonth - 1, startDay);
-  var endDate = new Date(endYear, endMonth - 1, endDay);
+  // 解析使用者輸入的日期
+  var startYear = parseInt(startInput.substring(0, 4), 10);
+  var startMonth = parseInt(startInput.substring(4, 6), 10) - 1;
+  var startDay = parseInt(startInput.substring(6, 8), 10);
+  var endYear = parseInt(endInput.substring(0, 4), 10);
+  var endMonth = parseInt(endInput.substring(4, 6), 10) - 1;
+  var endDay = parseInt(endInput.substring(6, 8), 10);
+  
+  var startDate = new Date(startYear, startMonth, startDay);
+  var endDate = new Date(endYear, endMonth, endDay);
   
   // 取得目前作用的工作表並清除所有內容
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
